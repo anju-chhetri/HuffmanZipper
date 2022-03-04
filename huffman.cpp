@@ -1,334 +1,28 @@
 #include <iostream>
+#include <fstream>
 #include <string>
+#include <sstream>
+#include <bitset>
 #include <unordered_map>
+#include "MinHeapNode.h"
+#include "MinHeap.cpp"
+#define INTERNAL_NODE_CHARACTER char(128)
 #define PSEUDO_EOF char(129)
+#define CHARACTER_CODE_SEPERATOR char(130)
+#define HEADER_ENTRY_SEPERATOR char(131)
+#define HEADER_TEXT_SEPERATOR char(132)
 using namespace std;
 
-
-unordered_map<char,string> codeMap;
-// This constant can be avoided by explicitly
-// calculating height of Huffman Tree
-#define MAX_TREE_HT 100
-
-// A Huffman tree node
-struct MinHeapNode {
-
-    // One of the input characters
-    char data;
-
-    // Frequency of the character
-    unsigned freq;
-
-    // Left and right child of this node
-    struct MinHeapNode *left, *right;
-};
-
-// A Min Heap:  Collection of
-// min-heap (or Huffman tree) nodes
-struct MinHeap {
-
-    // Current size of min heap
-    unsigned size;
-
-    // capacity of min heap
-    unsigned capacity;
-
-    // Array of minheap node pointers
-    struct MinHeapNode** array;
-};
-
-// A utility function allocate a new
-// min heap node with given character
-// and frequency of the character
-struct MinHeapNode* newNode(char data, unsigned freq)
+void createcodeMap(unordered_map<char, int> frequencyMap)
 {
-    struct MinHeapNode* temp = (struct MinHeapNode*)malloc(
-        sizeof(struct MinHeapNode));
-
-    temp->left = temp->right = NULL;
-    temp->data = data;
-    temp->freq = freq;
-
-    return temp;
-}
-
-// A utility function to create
-// a min heap of given capacity
-struct MinHeap* createMinHeap(unsigned capacity)
-
-{
-
-    struct MinHeap* minHeap
-        = (struct MinHeap*)malloc(sizeof(struct MinHeap));
-
-    // current size is 0
-    minHeap->size = 0;
-
-    minHeap->capacity = capacity;
-
-    minHeap->array = (struct MinHeapNode**)malloc(
-        minHeap->capacity * sizeof(struct MinHeapNode*));
-    return minHeap;
-}
-
-// A utility function to
-// swap two min heap nodes
-void swapMinHeapNode(struct MinHeapNode** a,
-                     struct MinHeapNode** b)
-
-{
-
-    struct MinHeapNode* t = *a;
-    *a = *b;
-    *b = t;
-}
-
-// The standard minHeapify function.
-void minHeapify(struct MinHeap* minHeap, int idx)
-
-{
-
-    int smallest = idx;
-    int left = 2 * idx + 1;
-    int right = 2 * idx + 2;
-
-    if (left < minHeap->size
-        && minHeap->array[left]->freq
-               < minHeap->array[smallest]->freq)
-        smallest = left;
-
-    if (right < minHeap->size
-        && minHeap->array[right]->freq
-               < minHeap->array[smallest]->freq)
-        smallest = right;
-
-    if (smallest != idx) {
-        swapMinHeapNode(&minHeap->array[smallest],
-                        &minHeap->array[idx]);
-        minHeapify(minHeap, smallest);
-    }
-}
-
-// A utility function to check
-// if size of heap is 1 or not
-int isSizeOne(struct MinHeap* minHeap)
-{
-
-    return (minHeap->size == 1);
-}
-
-// A standard function to extract
-// minimum value node from heap
-struct MinHeapNode* extractMin(struct MinHeap* minHeap)
-
-{
-
-    struct MinHeapNode* temp = minHeap->array[0];
-    minHeap->array[0] = minHeap->array[minHeap->size - 1];
-
-    --minHeap->size;
-    minHeapify(minHeap, 0);
-
-    return temp;
-}
-
-// A utility function to insert
-// a new node to Min Heap
-void insertMinHeap(struct MinHeap* minHeap,
-                   struct MinHeapNode* minHeapNode)
-
-{
-
-    ++minHeap->size;
-    int i = minHeap->size - 1;
-
-    while (i
-           && minHeapNode->freq
-                  < minHeap->array[(i - 1) / 2]->freq) {
-
-        minHeap->array[i] = minHeap->array[(i - 1) / 2];
-        i = (i - 1) / 2;
-    }
-
-    minHeap->array[i] = minHeapNode;
-}
-
-// A standard function to build min heap
-void buildMinHeap(struct MinHeap* minHeap)
-
-{
-
-    int n = minHeap->size - 1;
-    int i;
-
-    for (i = (n - 1) / 2; i >= 0; --i)
-        minHeapify(minHeap, i);
-}
-
-// A utility function to print an array of size n
-void printArr(int arr[], int n)
-{
-    int i;
-    for (i = 0; i < n; ++i)
-        printf("%d", arr[i]);
-
-    printf("\n");
-}
-
-// Utility function to check if this node is leaf
-int isLeaf(struct MinHeapNode* root)
-
-{
-
-    return !(root->left) && !(root->right);
-}
-
-// Creates a min heap of capacity
-// equal to size and inserts all character of
-// data[] in min heap. Initially size of
-// min heap is equal to capacity
-struct MinHeap* createAndBuildMinHeap(char data[],
-                                      int freq[], int size)
-
-{
-
-    struct MinHeap* minHeap = createMinHeap(size);
-
-    for (int i = 0; i < size; ++i)
-        minHeap->array[i] = newNode(data[i], freq[i]);
-
-    minHeap->size = size;
-    buildMinHeap(minHeap);
-
-    return minHeap;
-}
-
-// The main function that builds Huffman tree
-struct MinHeapNode* buildHuffmanTree(char data[],
-                                     int freq[], int size)
-
-{
-    struct MinHeapNode *left, *right, *top;
-
-    // Step 1: Create a min heap of capacity
-    // equal to size.  Initially, there are
-    // modes equal to size.
-    struct MinHeap* minHeap
-        = createAndBuildMinHeap(data, freq, size);
-
-    // Iterate while size of heap doesn't become 1
-    while (!isSizeOne(minHeap)) {
-
-        // Step 2: Extract the two minimum
-        // freq items from min heap
-        left = extractMin(minHeap);
-        right = extractMin(minHeap);
-
-        // Step 3:  Create a new internal
-        // node with frequency equal to the
-        // sum of the two nodes frequencies.
-        // Make the two extracted node as
-        // left and right children of this new node.
-        // Add this node to the min heap
-        // '$' is a special value for internal nodes, not
-        // used
-        top = newNode('$', left->freq + right->freq);
-
-        top->left = left;
-        top->right = right;
-
-        insertMinHeap(minHeap, top);
-    }
-
-    // Step 4: The remaining node is the
-    // root node and the tree is complete.
-    return extractMin(minHeap);
-}
-
-// Prints huffman codes from the root of Huffman Tree.
-// It uses arr[] to store codes
-void printCodes(struct MinHeapNode* root, int arr[],
-                int top)
-
-{
-
-    // Assign 0 to left edge and recur
-    if (root->left) {
-
-        arr[top] = 0;
-        printCodes(root->left, arr, top + 1);
-    }
-
-    // Assign 1 to right edge and recur
-    if (root->right) {
-
-        arr[top] = 1;
-        printCodes(root->right, arr, top + 1);
-    }
-
-    // If this is a leaf node, then
-    // it contains one of the input
-    // characters, print the character
-    // and its code from arr[]
-    if (isLeaf(root)) {
-
-        printf("%c: ", root->data);
-        printArr(arr, top);
-    }
-}
-
-// The main function that builds a
-// Huffman Tree and print codes by traversing
-// the built Huffman Tree
-void HuffmanCodes(char data[], int freq[], int size)
-
-{
-    // Construct Huffman Tree
-    struct MinHeapNode* root
-        = buildHuffmanTree(data, freq, size);
-
-    // Print Huffman codes using
-    // the Huffman tree built above
-    int arr[MAX_TREE_HT], top = 0;
-
-    printCodes(root, arr, top);
-}
-
-void encodeCharacters(struct MinHeapNode* rootNode, string codeString) {
-
-    if (rootNode==nullptr)
-    {
-        return;
-    }
-
-    if (rootNode->data != '$') {
-        codeMap[rootNode->data] = codeString;
-
-    }
-    encodeCharacters(rootNode->left, codeString + "0");
-    encodeCharacters(rootNode->right, codeString + "1");
-}
-
-
-// Driver code
-void huffmans(unordered_map<char, int> frequencyMap, string text)
-{
-
-    //char arr[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
-    //int freq[] = { 5, 9, 12, 13, 16, 45 };
-
-//     std::unordered_map<char, int> frequencyMap = {
-//         {'b', 9},
-//         {'a', 5},
-//         {'c', 12},
-//         {'d', 13},
-//         {'e', 16},
-//         {'f', 45}};
-    for(const auto &item: frequencyMap)
+     for(const auto &item: frequencyMap)
     {
         cout<<item.first<<"  "<<item.second<<"\n";
-    }    char arr[frequencyMap.size()];
-    int freq[frequencyMap.size()];
+    }
+
+    int size = frequencyMap.size();
+    char arr[size+1];
+    int freq[size+1];
     int i=0;
     for(const auto &item: frequencyMap)
     {
@@ -336,12 +30,13 @@ void huffmans(unordered_map<char, int> frequencyMap, string text)
         freq[i] = item.second;
         i++;
     }
-
-    int size = sizeof(arr) / sizeof(arr[0]);
+    arr[i] = PSEUDO_EOF;//we are going to keep PSEUDO_EOF at the end of the compressed file to separate padding bits(so that we mistakely do not decode padding bits
+    freq[i] = 1;
+    //int size = sizeof(arr) / sizeof(arr[0]);
 
     // Construct Huffman Tree
     struct MinHeapNode* root
-        = buildHuffmanTree(arr, freq, size);
+        = buildHuffmanTree(arr, freq, size+1);
 
     string tempString;
     encodeCharacters(root, tempString);
@@ -349,15 +44,136 @@ void huffmans(unordered_map<char, int> frequencyMap, string text)
     for (const auto &item: codeMap) {
     cout << "{" << item.first << ": " << item.second << "}\n";
     }
-
-
-    for(int i=0;i<text.length();i++){
-
-
-
-    }
-
-
 }
 
 
+void writeHeader(ofstream &outputStream) {
+    for (const auto &item : codeMap)
+        outputStream << item.first << CHARACTER_CODE_SEPERATOR << item.second << HEADER_ENTRY_SEPERATOR;
+    outputStream << HEADER_TEXT_SEPERATOR;
+}
+
+void compressTofile(string InputfileName ,string OutputfileName) {
+
+    char character;
+    string file;
+    ifstream inputStream;
+    ofstream outputStream;
+    outputStream.open(OutputfileName, ios::out);
+    inputStream.open(InputfileName, ios::in);
+    writeHeader(outputStream);
+    while (inputStream.get(character))
+        file += codeMap[character];
+    inputStream.close();
+    file += codeMap[PSEUDO_EOF];
+    unsigned long remainder = (file.size() - 1) % 8;
+    for (int i = 0; i < 8 - remainder; ++i)
+        file += '0';
+    stringstream stringStream(file);
+
+    while (stringStream.good()) {
+        bitset<8> bits;
+        stringStream >> bits;
+        char c = char(bits.to_ulong());
+        outputStream << c;
+    }
+
+
+    outputStream.flush();
+    outputStream.close();
+}
+
+void readHeader(ifstream &inputStream) {
+    codeMap.clear();
+    char character;
+    inputStream.get(character);
+    char key = character;
+    while (character != HEADER_TEXT_SEPERATOR) {
+        if (character == CHARACTER_CODE_SEPERATOR) {
+            inputStream.get(character);
+            while (character != HEADER_ENTRY_SEPERATOR) {
+                codeMap[key] += character;
+                inputStream.get(character);
+            }
+        } else
+            key = character;
+        inputStream.get(character);
+    }
+}
+
+struct MinHeapNode* buildDecodingTree() {
+
+    struct MinHeapNode* rootNode = newNode(INTERNAL_NODE_CHARACTER);
+    struct MinHeapNode* previousNode;
+
+    for (const auto &item : codeMap) {
+        previousNode = rootNode;
+        struct MinHeapNode* new_node = newNode(item.first);
+        string characterCode = item.second;
+        for (int i = 0; i < characterCode.size(); ++i) {
+            if (characterCode[i] == '0') {
+                if (i == characterCode.size() - 1)
+                    //previousNode->setLeft(newNode);
+                    previousNode->left = new_node;
+                else {
+                    if (!previousNode->left) {
+                        previousNode->left = newNode(INTERNAL_NODE_CHARACTER);
+                        previousNode = previousNode->left;
+                    } else previousNode = previousNode->left;
+                }
+            } else {
+                if (i == characterCode.size() - 1)
+                    previousNode->right = new_node;
+                else {
+                    if (!previousNode->right) {
+                        previousNode->right = newNode(INTERNAL_NODE_CHARACTER);
+                        previousNode = previousNode->right;
+                    } else previousNode = previousNode->right;
+                }
+            }
+        }
+
+    }
+    return rootNode;
+}
+
+void decompressToFile(string codeString, struct MinHeapNode* rootNode, string decompressedFileName) {
+    ofstream outputStream;
+    outputStream.open(decompressedFileName, ios::out);
+    struct MinHeapNode* traversingPointer = rootNode;
+    for (int i = 0; i < codeString.size() + 1; ++i) {
+        if (codeString[i] == '0')
+            traversingPointer = traversingPointer->left;
+        else
+            traversingPointer = traversingPointer->right;
+
+        if (traversingPointer->data != INTERNAL_NODE_CHARACTER) //i.e it is leaf nodes with characters like A, B, C
+        {
+            if (traversingPointer->data == PSEUDO_EOF)
+                break;
+            outputStream << traversingPointer->data;
+            traversingPointer = rootNode;
+        }
+    }
+    outputStream.flush();
+    outputStream.close();
+
+}
+
+void deHuffer(string compressedFileName, string decompressedFileName) {
+    char character;
+    string codeString;
+    ifstream inputStream;
+    inputStream.open(compressedFileName, ios::in);
+    readHeader(inputStream);
+    while (inputStream.get(character)) {
+        bitset<8> bits(character);
+        codeString += bits.to_string();
+
+
+    }
+    struct MinHeapNode*rootNode = buildDecodingTree();
+    decompressToFile(codeString, rootNode, decompressedFileName);
+
+
+}

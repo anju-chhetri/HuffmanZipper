@@ -2,48 +2,50 @@
 #include <string>
 #include <unordered_map>
 #include <fstream>
+#include <time.h>
+#include "MinHeapNode.h"
 #include "huffman.cpp"
 #include "freqTable.cpp"
 using namespace std;
+//extern unordered_map<char,string> codeMap;//codeMap created in MinHeap and used in huffman
 
-int main(){
-//     fstream file;
-//     file.open("FileToRead.txt",ios::in);
-//     string text;
-//     file>>text;
-    ifstream file("FileToRead.txt");
-    string text((istreambuf_iterator<char>(file) ),
-                       (istreambuf_iterator<char>()));
-    unordered_map<char, int> textRead = FrequencyTable(text);
-    huffmans(textRead);
-    file.close();
+int filesize(const char* filename)
+{
+    ifstream in_file(filename, ios::binary);
+   in_file.seekg(0, ios::end);
+   int file_size = in_file.tellg();
+   return file_size;
 }
 
-// struct Node{
-//     char character;
-//     int frequency;
-//     struct Node *leftChild, *rightChild;
-// };
-// typedef struct Node node;
-//
-// node *leafNodeAssign(char ch, int freq){
-//     node *temp =  (node*)malloc(sizeof(Node));
-//     temp->character = ch;
-//     temp->frequency = freq;
-//     temp->leftChild = NULL; temp->rightChild = NULL;
-//     return temp;
-// }
-//
-//
-//
-// int main(){
-//     char test[5] = {'a', 'b','c','d','e'};
-//     int freq[5] = {10,45,34,23,45};
-//     node nodearr[5];
-//     for(int i=0;i<5;i++){
-//         nodearr[i] = leafNodeAssign(test[i],freq[i]);
-//     }
-//
-//
-//}
+int main(){
+    unordered_map<char, int> frequencyMap;
+    string workingMode;
+    cout<<"Enter working mode: ";
+    cin >> workingMode;
+
+    if(workingMode == "compress")
+    {
+        clock_t tStart = clock();
+        frequencyMap = frequencyTable("FileToRead.txt");
+        createcodeMap(frequencyMap);
+        compressTofile("FileToRead.txt","compressed.txt");
+        cout <<"Time taken: "<<(1.0*(clock() - tStart)/CLOCKS_PER_SEC)<<"sec"<<endl;
+        cout << "Input File Size : "<<filesize("FileToRead.txt")<<" bytes."<<endl;
+        cout<< "Compressed File Size : "<<filesize("compressed.txt")<<" bytes."<<endl;
+        cout<< "Compression Ratio : "<<(1.0*filesize("compressed.txt")/filesize("FileToRead.txt"))<<endl;
+    }
+    else if(workingMode == "decompress")
+    {
+        clock_t tStart = clock();
+        frequencyMap = frequencyTable("FileToRead.txt");
+        createcodeMap(frequencyMap);
+        deHuffer("compressed.txt","decompressed.txt");
+        cout <<"Time taken: "<<(1.0*(clock() - tStart)/CLOCKS_PER_SEC)<<"sec"<<endl;
+        cout << "Input File (Compressed) Size : "<<filesize("compressed.txt")<<" bytes."<<endl;
+        cout<< "DeCompressed File Size : "<<filesize("decompressed.txt")<<" bytes."<<endl;
+    }
+    return 0;
+}
+
+
 
