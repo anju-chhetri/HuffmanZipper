@@ -164,16 +164,17 @@ struct MinHeap* createAndBuildMinHeap(char data[],
                                       int freq[], int size)
 
 {
+    struct MinHeap* minHeap = createMinHeap(size);    // After this minHeap->array has the size of the MinheapNode * total Unique Letters
 
-    struct MinHeap* minHeap = createMinHeap(size);
 
     for (int i = 0; i < size; ++i)
-        minHeap->array[i] = newNode(data[i], freq[i]);
+        minHeap->array[i] = newNode(data[i], freq[i]);  //a node of each unique character is created
 
+        //size = total number of unique character
     minHeap->size = size;
     buildMinHeap(minHeap);
 
-    return minHeap;
+    return minHeap;  //tree containing minimum heap
 }
 
 // The main function that builds Huffman tree

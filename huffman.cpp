@@ -8,9 +8,9 @@
 #include "MinHeap.cpp"
 #define INTERNAL_NODE_CHARACTER char(128)
 #define PSEUDO_EOF char(129)
-#define CHARACTER_CODE_SEPERATOR char(130)
-#define HEADER_ENTRY_SEPERATOR char(131)
-#define HEADER_TEXT_SEPERATOR char(132)
+#define CHARACTER_SEPARATOR char(130)
+#define VALUE_SEPARATOR char(131)
+#define HEADER_SEPARATOR char(132)
 using namespace std;
 
 void createcodeMap(unordered_map<char, int> frequencyMap)
@@ -49,8 +49,8 @@ void createcodeMap(unordered_map<char, int> frequencyMap)
 
 void writeHeader(ofstream &outputStream) {
     for (const auto &item : codeMap)
-        outputStream << item.first << CHARACTER_CODE_SEPERATOR << item.second << HEADER_ENTRY_SEPERATOR;
-    outputStream << HEADER_TEXT_SEPERATOR;
+        outputStream << item.first << CHARACTER_SEPARATOR << item.second << VALUE_SEPARATOR;
+    outputStream << HEADER_SEPARATOR;
 }
 
 void compressTofile(string InputfileName ,string OutputfileName) {
@@ -88,10 +88,10 @@ void readHeader(ifstream &inputStream) {
     char character;
     inputStream.get(character);
     char key = character;
-    while (character != HEADER_TEXT_SEPERATOR) {
-        if (character == CHARACTER_CODE_SEPERATOR) {
+    while (character != HEADER_SEPARATOR) {
+        if (character == CHARACTER_SEPARATOR) {
             inputStream.get(character);
-            while (character != HEADER_ENTRY_SEPERATOR) {
+            while (character != VALUE_SEPARATOR) {
                 codeMap[key] += character;
                 inputStream.get(character);
             }
@@ -160,7 +160,7 @@ void decompressToFile(string codeString, struct MinHeapNode* rootNode, string de
 
 }
 
-void deHuffer(string compressedFileName, string decompressedFileName) {
+void Decipher(string compressedFileName, string decompressedFileName) {
     char character;
     string codeString;
     ifstream inputStream;
@@ -169,7 +169,6 @@ void deHuffer(string compressedFileName, string decompressedFileName) {
     while (inputStream.get(character)) {
         bitset<8> bits(character);
         codeString += bits.to_string();
-
 
     }
     struct MinHeapNode*rootNode = buildDecodingTree();
