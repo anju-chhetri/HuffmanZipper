@@ -28,7 +28,7 @@ int main(){
         clock_t tStart = clock();
         frequencyMap = frequencyTable("FileToRead.txt");
         createcodeMap(frequencyMap);
-        compressTofile("FileToRead.txt","compressed.txt");
+        compressTofile("input.txt","compressed.txt");
         cout <<"Time taken: "<<(1.0*(clock() - tStart)/CLOCKS_PER_SEC)<<"sec"<<endl;
         cout << "Input File Size : "<<filesize("FileToRead.txt")<<" bytes."<<endl;
         cout<< "Compressed File Size : "<<filesize("compressed.txt")<<" bytes."<<endl;

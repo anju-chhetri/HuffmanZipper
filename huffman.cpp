@@ -30,52 +30,66 @@ void createcodeMap(unordered_map<char, int> frequencyMap)
         freq[i] = item.second;
         i++;
     }
-    arr[i] = PSEUDO_EOF;//we are going to keep PSEUDO_EOF at the end of the compressed file to separate padding bits(so that we mistakely do not decode padding bits
+    arr[i] = PSEUDO_EOF;//later we want to make a node for PSEUDO_EOF in the huffman tree
+    //we are going to keep PSEUDO_EOF "binary_value" at the end of the compressed file to mark end of "binary_values" for input.txt or to
+    // separate it from padding bits(so that we mistakely do not decode padding bits)
     freq[i] = 1;
-    //int size = sizeof(arr) / sizeof(arr[0]);
 
-    // Construct Huffman Tree
+
+    // Construct Huffman Tree or encoding tree
     struct MinHeapNode* root
         = buildHuffmanTree(arr, freq, size+1);
 
-    string tempString;
-    encodeCharacters(root, tempString);
+    string tempString;//empty string
+    encodeCharacters(root, tempString);//this is a recursive function that calls itself until all characters get their binary values
 
-    for (const auto &item: codeMap) {
+    for (const auto &item: codeMap) {//prints out the codeMap
     cout << "{" << item.first << ": " << item.second << "}\n";
     }
 }
 
 
-void writeHeader(ofstream &outputStream) {
+void writeHeader(ofstream &outputStream) {//used to store the codeMap in compressed.txt
     for (const auto &item : codeMap)
-        outputStream << item.first << CHARACTER_SEPARATOR << item.second << VALUE_SEPARATOR;
-    outputStream << HEADER_SEPARATOR;
+        outputStream << item.first << CHARACTER_SEPARATOR << item.second << VALUE_SEPARATOR;//CHARACTER_SEPARATOR comes after each characters
+        //VALUE_SEPARATOR comes after "binary value" for each character
+    outputStream << HEADER_SEPARATOR;//HEADER_SEPARATOR comes at the end of codeMap
 }
 
-void compressTofile(string InputfileName ,string OutputfileName) {
+void compressTofile(string Inputfile ,string Outputfile) {
 
     char character;
-    string file;
+    string fileString;
     ifstream inputStream;
     ofstream outputStream;
-    outputStream.open(OutputfileName, ios::out);
-    inputStream.open(InputfileName, ios::in);
+    outputStream.open(Outputfile, ios::out);
+    inputStream.open(Inputfile, ios::in);
     writeHeader(outputStream);
-    while (inputStream.get(character))
-        file += codeMap[character];
+    while (inputStream.get(character))//read a character from inputFile
+        fileString += codeMap[character];//fileString is a string where binary value of character just read is added
     inputStream.close();
-    file += codeMap[PSEUDO_EOF];
-    unsigned long remainder = (file.size() - 1) % 8;
-    for (int i = 0; i < 8 - remainder; ++i)
-        file += '0';
-    stringstream stringStream(file);
 
-    while (stringStream.good()) {
-        bitset<8> bits;
-        stringStream >> bits;
-        char c = char(bits.to_ulong());
-        outputStream << c;
+    //add "binary value" of PSEUDO_EOF to mark end of "binary_values" for input.txt
+    fileString += codeMap[PSEUDO_EOF];
+
+
+
+    //We can write or read to or from file only if the bits we want to read or write are multiple of 8 bits
+    //While writing we make a pack of 8 bits, make a character out of it and write the character to the file
+    //So we check how many bits are we deficit to make fileString(bits to be stored) a multiple of 8 bits
+
+    unsigned long remainder = (fileString.size() - 1) % 8;//remainder is the number of deficit bits
+    for (int i = 0; i < 8 - remainder; ++i)
+        fileString += '0';//add '0' as the padding bits to the fileString
+
+
+    stringstream strStream(fileString);
+
+    while (strStream.good()) {//while strStream has proper values
+        bitset<8> bits;//Bitset is a container in C++ Standard Template Library for dealing with data at the bit level
+        strStream >> bits;//here bits hold 8 bits extracted from strStream
+        char c = char(bits.to_ulong());//pack the 8 bits as a character
+        outputStream << c;//write the character in the outputFile
     }
 
 
@@ -84,18 +98,18 @@ void compressTofile(string InputfileName ,string OutputfileName) {
 }
 
 void readHeader(ifstream &inputStream) {
-    codeMap.clear();
+    codeMap.clear();//clear codeMap that were built and used for compression of previous text file
     char character;
     inputStream.get(character);
-    char key = character;
-    while (character != HEADER_SEPARATOR) {
+    char key = character;//key for the codeMap
+    while (character != HEADER_SEPARATOR) {//HEADER_SEPARATOR marks the end of codeMap
         if (character == CHARACTER_SEPARATOR) {
             inputStream.get(character);
-            while (character != VALUE_SEPARATOR) {
+            while (character != VALUE_SEPARATOR) {//VALUE_SEPARATOR marks the end of "binary value" of the character
                 codeMap[key] += character;
                 inputStream.get(character);
             }
-        } else
+        } else//if it is not a CHARACTER_SEPARATOR i.e if it is a character
             key = character;
         inputStream.get(character);
     }
