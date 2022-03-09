@@ -1,6 +1,6 @@
 # HuffmanZipper
-A 4th Semester project on Data Structure and Algorithms </br>
-A simple text compressor created using Huffman Coding Algorithm.
+A 4th Semester project on Data Structure and Algorithms. </br>
+This is a simple text compressor created using Huffman Coding Algorithm.
 
 Data Structures and Algorithms used:
 * Huffman Coding Algorithm
