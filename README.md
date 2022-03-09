@@ -1,5 +1,5 @@
 # HuffmanZipper
-Semester project on Data Structure and Algorithms </br>
+A 4th Semester project on Data Structure and Algorithms </br>
 A simple text compressor created using Huffman Coding Algorithm.
 
 Data Structures and Algorithms used:
@@ -8,7 +8,7 @@ Data Structures and Algorithms used:
 * Unordered_map
 * Binary Tree
 
-To run this program clone this repository and compile main.cpp.</br>
+To run this program, clone this repository and compile main.cpp.</br>
 ``` 
 git clone git@github.com:anju-chhetri/HuffmanZipper.git
 ```
